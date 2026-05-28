@@ -3,7 +3,7 @@ from __future__ import annotations
 import streamlit as st
 from streamlit_webrtc import WebRtcMode, webrtc_streamer
 
-from zoet_plus.auth import authenticate_user, create_user, update_display_name
+from zoet_plus.auth import authenticate_user, create_user, get_user_by_id, get_user_by_username, update_display_name
 from zoet_plus.chat import get_chat_messages, save_chat_message
 from zoet_plus.config import get_database_url
 from zoet_plus.db import init_db, session_scope
@@ -35,6 +35,7 @@ def boot() -> None:
     st.session_state.setdefault("user_id", None)
     st.session_state.setdefault("username", None)
     st.session_state.setdefault("display_name", None)
+    st.session_state.setdefault("auth_notice", "")
     st.session_state.setdefault("page", "Dashboard")
     st.session_state.setdefault("active_meeting_id", None)
 
@@ -43,17 +44,50 @@ def boot() -> None:
         st.session_state.pending_join_code = join_code
         st.session_state.page = "Join"
 
+    repair_authenticated_session()
+
+
+def repair_authenticated_session() -> None:
+    if not st.session_state.user_id and not st.session_state.username:
+        return
+
+    with session_scope() as session:
+        user = get_user_by_id(session, st.session_state.user_id)
+        if not user:
+            user = get_user_by_username(session, st.session_state.username)
+
+        if user:
+            st.session_state.user_id = user.id
+            st.session_state.username = user.username
+            st.session_state.display_name = user.display_name
+            return
+
+    clear_authenticated_session()
+    st.session_state.auth_notice = "Your previous login session expired. Please sign up or log in again."
+
+
+def set_authenticated_user(*, user_id: str, username: str, display_name: str) -> None:
+    st.session_state.user_id = user_id
+    st.session_state.username = username
+    st.session_state.display_name = display_name
+    st.session_state.auth_notice = ""
+
 
 def login_user(user) -> None:
-    st.session_state.user_id = user.id
-    st.session_state.username = user.username
-    st.session_state.display_name = user.display_name
+    set_authenticated_user(user_id=user.id, username=user.username, display_name=user.display_name)
     st.rerun()
 
 
-def logout_user() -> None:
+def clear_authenticated_session() -> None:
     for key in ("user_id", "username", "display_name"):
         st.session_state[key] = None
+    st.session_state.active_meeting_id = None
+    st.session_state.page = "Dashboard"
+
+
+def logout_user() -> None:
+    clear_authenticated_session()
+    st.session_state.auth_notice = ""
     st.rerun()
 
 
@@ -71,6 +105,9 @@ def render_auth() -> None:
 
     with right:
         with st.container(border=True):
+            if st.session_state.auth_notice:
+                st.warning(st.session_state.auth_notice)
+
             signup_tab, login_tab = st.tabs(["Signup", "Login"])
 
             with signup_tab:
@@ -81,6 +118,7 @@ def render_auth() -> None:
                     submitted = st.form_submit_button("Create account", use_container_width=True)
 
                 if submitted:
+                    user_payload = None
                     with session_scope() as session:
                         moderation = moderate_and_record(
                             session,
@@ -92,10 +130,17 @@ def render_auth() -> None:
                             return
                         result = create_user(session, username, display_name, password)
                         if result.ok and result.user:
-                            st.success("Account created. Opening your dashboard...")
-                            login_user(result.user)
+                            user_payload = {
+                                "id": result.user.id,
+                                "username": result.user.username,
+                                "display_name": result.user.display_name,
+                            }
                         else:
                             st.error(result.message)
+                    if user_payload:
+                        set_authenticated_user(**user_payload)
+                        st.success("Account created. Opening your dashboard...")
+                        st.rerun()
 
             with login_tab:
                 with st.form("login_form"):
@@ -231,17 +276,20 @@ def render_join_meeting() -> None:
 
     if submitted:
         with st.spinner("Joining meeting..."):
+            joined_meeting_id = None
             with session_scope() as session:
                 result = join_meeting_by_code(session, join_code=join_code, user_id=st.session_state.user_id)
                 if result.ok:
                     meeting = result.payload["meeting"]
-                    st.session_state.active_meeting_id = meeting["id"]
-                    st.session_state.pending_join_code = ""
+                    joined_meeting_id = meeting["id"]
                     st.success(f"Joined {meeting['title']}.")
-                    st.session_state.page = "Room"
-                    st.rerun()
                 else:
                     st.error(result.message)
+            if joined_meeting_id:
+                st.session_state.active_meeting_id = joined_meeting_id
+                st.session_state.pending_join_code = ""
+                st.session_state.page = "Room"
+                st.rerun()
 
 
 def render_history() -> None:

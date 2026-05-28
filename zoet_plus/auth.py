@@ -91,6 +91,19 @@ def authenticate_user(session: Session, username: str, password: str) -> AuthRes
     return AuthResult(True, "Logged in.", user)
 
 
+def get_user_by_id(session: Session, user_id: str | None) -> User | None:
+    if not user_id:
+        return None
+    return session.get(User, user_id)
+
+
+def get_user_by_username(session: Session, username: str | None) -> User | None:
+    username = normalize_username(username or "")
+    if not username:
+        return None
+    return session.scalar(select(User).where(User.username == username))
+
+
 def update_display_name(session: Session, user_id: str, display_name: str) -> AuthResult:
     display_name = str(display_name or "").strip()
     error = validate_display_name(display_name)
