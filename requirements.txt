@@ -1,0 +1,10 @@
+streamlit==1.45.1
+streamlit-webrtc==0.47.9
+SQLAlchemy==2.0.41
+psycopg2-binary==2.9.10
+bcrypt==4.3.0
+python-dotenv==1.1.0
+openai==1.82.1
+opencv-python-headless==4.11.0.86
+av==12.3.0
+numpy==2.2.6
