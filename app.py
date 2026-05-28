@@ -70,45 +70,46 @@ def render_auth() -> None:
         pill("Focus metadata")
 
     with right:
-        login_tab, signup_tab = st.tabs(["Login", "Signup"])
+        with st.container(border=True):
+            signup_tab, login_tab = st.tabs(["Signup", "Login"])
 
-        with login_tab:
-            with st.form("login_form"):
-                username = st.text_input("Username", placeholder="mahi.dev", autocomplete="username")
-                password = st.text_input("Password", type="password", autocomplete="current-password")
-                submitted = st.form_submit_button("Login", use_container_width=True)
+            with signup_tab:
+                with st.form("signup_form"):
+                    display_name = st.text_input("Display name", placeholder="Mahi")
+                    username = st.text_input("Choose username", placeholder="your.name", autocomplete="username")
+                    password = st.text_input("Choose password", type="password", autocomplete="new-password")
+                    submitted = st.form_submit_button("Create account", use_container_width=True)
 
-            if submitted:
-                with session_scope() as session:
-                    result = authenticate_user(session, username, password)
-                    if result.ok and result.user:
-                        login_user(result.user)
-                    else:
-                        st.error(result.message)
+                if submitted:
+                    with session_scope() as session:
+                        moderation = moderate_and_record(
+                            session,
+                            source="display_name",
+                            content=display_name,
+                        )
+                        if moderation.flagged:
+                            st.error("This display name was blocked by AI moderation.")
+                            return
+                        result = create_user(session, username, display_name, password)
+                        if result.ok and result.user:
+                            st.success("Account created. Opening your dashboard...")
+                            login_user(result.user)
+                        else:
+                            st.error(result.message)
 
-        with signup_tab:
-            with st.form("signup_form"):
-                display_name = st.text_input("Display name", placeholder="Mahi")
-                username = st.text_input("Choose username", placeholder="mahi.dev", autocomplete="username")
-                password = st.text_input("Choose password", type="password", autocomplete="new-password")
-                submitted = st.form_submit_button("Create account", use_container_width=True)
+            with login_tab:
+                with st.form("login_form"):
+                    username = st.text_input("Username", placeholder="your.name", autocomplete="username")
+                    password = st.text_input("Password", type="password", autocomplete="current-password")
+                    submitted = st.form_submit_button("Login", use_container_width=True)
 
-            if submitted:
-                with session_scope() as session:
-                    moderation = moderate_and_record(
-                        session,
-                        source="display_name",
-                        content=display_name,
-                    )
-                    if moderation.flagged:
-                        st.error("This display name was blocked by AI moderation.")
-                        return
-                    result = create_user(session, username, display_name, password)
-                    if result.ok and result.user:
-                        st.success("Account created. Opening your dashboard...")
-                        login_user(result.user)
-                    else:
-                        st.error(result.message)
+                if submitted:
+                    with session_scope() as session:
+                        result = authenticate_user(session, username, password)
+                        if result.ok and result.user:
+                            login_user(result.user)
+                        else:
+                            st.error(result.message)
 
 
 def render_dashboard() -> None:

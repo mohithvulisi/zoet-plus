@@ -11,6 +11,7 @@ def apply_theme() -> None:
         <style>
         :root {
             --zoet-ink: #111827;
+            --zoet-strong: #0f172a;
             --zoet-muted: #64748b;
             --zoet-line: #dbe3ee;
             --zoet-bg: #f7f9fc;
@@ -21,8 +22,29 @@ def apply_theme() -> None:
         }
         .stApp {
             background:
-                linear-gradient(180deg, #f7f9fc 0%, #eef6f3 42%, #f8fafc 100%);
+                radial-gradient(circle at 12% 8%, rgba(15, 159, 110, 0.12), transparent 28%),
+                radial-gradient(circle at 84% 14%, rgba(37, 99, 235, 0.10), transparent 25%),
+                linear-gradient(180deg, #f8fcfb 0%, #eef7f3 48%, #f8fafc 100%);
             color: var(--zoet-ink);
+        }
+        .main .block-container {
+            max-width: 1180px;
+            padding-top: 3rem;
+            padding-bottom: 4rem;
+        }
+        h1, h2, h3, p, label, span {
+            letter-spacing: 0;
+        }
+        h1 {
+            color: var(--zoet-strong);
+            font-weight: 850;
+            line-height: 1.08;
+        }
+        h2, h3 {
+            color: var(--zoet-strong);
+        }
+        div[data-testid="stCaptionContainer"] {
+            color: var(--zoet-muted);
         }
         [data-testid="stSidebar"] {
             background: #ffffff;
@@ -39,17 +61,74 @@ def apply_theme() -> None:
             border-color: var(--zoet-line);
             box-shadow: 0 10px 30px rgba(17, 24, 39, 0.04);
         }
+        [data-testid="stForm"] {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid var(--zoet-line);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 18px 46px rgba(15, 23, 42, 0.08);
+        }
+        [data-testid="stWidgetLabel"] p,
+        [data-testid="stTextInputRootElement"] label,
+        .stTextInput label,
+        .stTextArea label {
+            color: #334155 !important;
+            font-weight: 700 !important;
+        }
+        .stTextInput input,
+        .stTextArea textarea {
+            background: #ffffff !important;
+            color: var(--zoet-strong) !important;
+            border: 1px solid #c8d4e4 !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            caret-color: var(--zoet-green) !important;
+        }
+        .stTextInput input:focus,
+        .stTextArea textarea:focus {
+            border-color: var(--zoet-green) !important;
+            box-shadow: 0 0 0 3px rgba(15, 159, 110, 0.14) !important;
+        }
+        .stTextInput input::placeholder,
+        .stTextArea textarea::placeholder {
+            color: #94a3b8 !important;
+            opacity: 1 !important;
+        }
+        button[title="View fullscreen"],
+        [data-testid="InputInstructions"] {
+            color: var(--zoet-muted) !important;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+            border-bottom: 1px solid var(--zoet-line);
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #52637a !important;
+            font-weight: 800;
+            padding-left: 0;
+            padding-right: 16px;
+        }
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            color: var(--zoet-green) !important;
+        }
+        .stTabs [data-baseweb="tab-highlight"] {
+            background-color: var(--zoet-green);
+        }
         .stButton > button, .stFormSubmitButton > button {
             border-radius: 8px;
-            border: 1px solid #0f172a;
-            background: #0f172a;
+            border: 1px solid var(--zoet-strong);
+            background: var(--zoet-strong);
             color: #ffffff;
             font-weight: 700;
+            min-height: 42px;
         }
         .stButton > button:hover, .stFormSubmitButton > button:hover {
             border-color: var(--zoet-green);
             color: #ffffff;
             background: var(--zoet-green);
+        }
+        .stAlert {
+            border-radius: 8px;
         }
         .zoet-brand-row {
             display: flex;
@@ -103,6 +182,14 @@ def apply_theme() -> None:
             font-weight: 800;
             letter-spacing: 0.08em;
             color: #0f172a;
+        }
+        @media (max-width: 760px) {
+            .main .block-container {
+                padding-top: 1.5rem;
+            }
+            [data-testid="stForm"] {
+                padding: 16px;
+            }
         }
         </style>
         """,
