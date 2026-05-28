@@ -8,7 +8,7 @@ The public deployment entrypoint is:
 streamlit run app.py
 ```
 
-The old React/Node MVP remains in `client/` and `server/` as historical reference, but Streamlit Community Cloud should deploy `app.py` from the repository root.
+Streamlit Community Cloud should deploy `app.py` from the repository root.
 
 ## Current Stack
 

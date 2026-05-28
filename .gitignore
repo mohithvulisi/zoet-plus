@@ -7,5 +7,4 @@ __pycache__/
 .pytest_cache/
 .streamlit/secrets.toml
 data/
-server/data/db.json
 .DS_Store
